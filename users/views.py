@@ -1,6 +1,6 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .serializers import UserSerializer, UserLoginSerializer
+from .serializers import UserSerializer, UserLoginSerializer, UserActionSerializer
 from rest_framework import status
 from .helpers import token_auth
 
@@ -23,6 +23,20 @@ def login_user(request):
 
 
 @api_view(['GET', 'PUT', 'DELETE'])
-# @token_auth()
-def user_management(request, id):
-    return Response({"message": "Hello, world!"})
+@token_auth
+def user_management(request, id, user):
+    if request.method == "GET":
+        serializer = UserSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    elif request.method == "PUT":
+        serializer = UserActionSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.update(user, serializer.data)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    elif request.method == "DELETE":
+        serializer = UserActionSerializer(user)
+        serializer.delete(user)
+        return Response({"success":True}, status=status.HTTP_200_OK)
+
+    return Response(serializer.data, status=status.HTTP_200_OK)

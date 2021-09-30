@@ -23,16 +23,19 @@ class UserSerializer(serializers.Serializer):
         }
 
     def create(self, validated_data):
-        query_build = '''
+        insert_query_build = '''
                 INSERT INTO users_userdata
                 (first_name, last_name, username, password, profile_picture, deleted, created_at)
                 VALUES (%s, %s, %s, %s, %s, %s, %s);
                 '''
+        fetch_query_build = '''
+            SELECT id FROM users_userdata WHERE username = %s;
+        '''
         validated_data["created_at"] = datetime.now()
         validated_data["password"] = bcrypt.hashpw(validated_data["password"].encode('utf8'), bcrypt.gensalt()).decode('utf8')
         with connection.cursor() as cursor:
             try:
-                cursor.execute(query_build, [
+                cursor.execute(insert_query_build, [
                     validated_data.get("first_name"),
                     validated_data.get("last_name"),
                     validated_data.get("username"),
@@ -41,8 +44,13 @@ class UserSerializer(serializers.Serializer):
                     validated_data.get("deleted"),
                     validated_data.get("created_at")
                 ])
+                cursor.execute(fetch_query_build, [validated_data.get("username")])
+                row = cursor.fetchone()
+                validated_data["id"] = row[0]
             except IntegrityError as e:
                 raise serializers.ValidationError("username already exists")
+            except Exception as e:
+                raise serializers.ValidationError("Error updating data")
         return validated_data
 
 
@@ -60,7 +68,7 @@ class UserLoginSerializer(serializers.Serializer):
 
 
     def create(self, validated_data):
-        user_row = UserData.objects.raw('SELECT * FROM users_userdata WHERE username=%s', [validated_data['username']])
+        user_row = UserData.objects.raw('SELECT * FROM users_userdata WHERE username=%s AND deleted=false', [validated_data['username']])
         if len(user_row)<1:
             raise serializers.ValidationError("Username does not exist")
         else:
@@ -84,3 +92,51 @@ class UserLoginSerializer(serializers.Serializer):
                 except Exception as e:
                     raise serializers.ValidationError("Error logging in")
             return validated_data
+
+
+class UserActionSerializer(serializers.Serializer):
+    first_name = serializers.CharField(max_length=100)
+    last_name = serializers.CharField(max_length=100)
+    username = serializers.CharField(max_length=100)
+    profile_picture = serializers.URLField(max_length=200, min_length=8, allow_blank=False)
+    deleted = serializers.BooleanField(default=False)
+
+    def update(self, instance, validated_data):
+        query_build = '''
+                UPDATE users_userdata
+                SET first_name = %s,
+                last_name = %s,
+                username = %s,
+                profile_picture = %s
+                WHERE id= %s;
+                '''
+        with connection.cursor() as cursor:
+            try:
+                cursor.execute(query_build, [
+                    validated_data["first_name"],
+                    validated_data["last_name"],
+                    validated_data["username"],
+                    validated_data["profile_picture"],
+                    instance.id
+                ])
+            except IntegrityError as e:
+                raise serializers.ValidationError("username already exists")
+            except Exception as e:
+                raise serializers.ValidationError("Error updating data")
+
+
+
+    def delete(self, user):
+        query_build = '''
+                UPDATE users_userdata
+                SET deleted = true
+                WHERE id= %s;
+                '''
+        with connection.cursor() as cursor:
+            try:
+                import pdb;pdb.set_trace()
+                cursor.execute(query_build, [
+                    user.id
+                ])
+            except Exception as e:
+                raise serializers.ValidationError("Error updating data")
