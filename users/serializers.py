@@ -26,11 +26,8 @@ class UserSerializer(serializers.Serializer):
         insert_query_build = '''
                 INSERT INTO users_userdata
                 (first_name, last_name, username, password, profile_picture, deleted, created_at)
-                VALUES (%s, %s, %s, %s, %s, %s, %s);
+                VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id;
                 '''
-        fetch_query_build = '''
-            SELECT id FROM users_userdata WHERE username = %s;
-        '''
         validated_data["created_at"] = datetime.now()
         validated_data["password"] = bcrypt.hashpw(validated_data["password"].encode('utf8'), bcrypt.gensalt()).decode('utf8')
         with connection.cursor() as cursor:
@@ -44,7 +41,6 @@ class UserSerializer(serializers.Serializer):
                     validated_data.get("deleted"),
                     validated_data.get("created_at")
                 ])
-                cursor.execute(fetch_query_build, [validated_data.get("username")])
                 row = cursor.fetchone()
                 validated_data["id"] = row[0]
             except IntegrityError as e:
@@ -134,7 +130,6 @@ class UserActionSerializer(serializers.Serializer):
                 '''
         with connection.cursor() as cursor:
             try:
-                import pdb;pdb.set_trace()
                 cursor.execute(query_build, [
                     user.id
                 ])

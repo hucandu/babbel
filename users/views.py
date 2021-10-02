@@ -4,6 +4,7 @@ from .serializers import UserSerializer, UserLoginSerializer, UserActionSerializ
 from rest_framework import status
 from .helpers import token_auth
 
+
 @api_view(['POST'])
 def register_user(request):
     serializer = UserSerializer(data=request.data)
