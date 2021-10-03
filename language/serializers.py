@@ -3,6 +3,7 @@ from .models import LanguageData
 from datetime import datetime
 from django.db import connection
 from django.db import IntegrityError
+from collections import OrderedDict
 
 class LanguageListSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False)
@@ -12,11 +13,12 @@ class LanguageListSerializer(serializers.Serializer):
     created_at = serializers.DateTimeField(required=False)
     updated_at = serializers.DateTimeField(required=False)
 
+    def to_representation(self, instance):
+        result = super(LanguageListSerializer, self).to_representation(instance)
+        return OrderedDict([(key, result[key]) for key in result if result[key] is not None])
+
     class Meta:
-        read_only_fields = ('id', 'deleted', 'created_at')
-        extra_kwargs = {
-            'password': {'write_only': True},
-        }
+        read_only_fields = ('id', 'deleted', 'created_at', 'updated_at')
 
     def create(self, validated_data):
         insert_query_build = '''
@@ -39,7 +41,6 @@ class LanguageListSerializer(serializers.Serializer):
             except IntegrityError as e:
                 raise serializers.ValidationError("language code already exists")
             except Exception as e:
-                import pdb;pdb.set_trace()
                 raise serializers.ValidationError("Error creating data")
         return validated_data
 
@@ -80,10 +81,7 @@ class LanguageActionSerializer(serializers.Serializer):
     updated_at = serializers.CharField(max_length=100, required=False)
 
     class Meta:
-        read_only_fields = ('id', 'deleted', 'created_at')
-        extra_kwargs = {
-            'password': {'write_only': True},
-        }
+        read_only_fields = ('id', 'deleted', 'created_at', 'updated_at')
 
     def create(self, validated_data):
         update_query_build = '''

@@ -21,7 +21,8 @@ urlpatterns += [
     # DRF auth token
     path("auth-token/", obtain_auth_token),
     path("user/",include('users.urls')),
-    path("language/",include('language.urls'))
+    path("language/",include('language.urls')),
+    path("lesson/",include('lesson.urls'))
 ]
 
 if settings.DEBUG:
