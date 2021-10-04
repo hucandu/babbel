@@ -37,7 +37,6 @@ class LessonListSerializer(serializers.Serializer):
                 row = cursor.fetchone()
                 validated_data["id"] = row[0]
             except Exception as e:
-                import pdb;pdb.set_trace()
                 raise serializers.ValidationError("Error creating data")
         return validated_data
 
@@ -70,7 +69,6 @@ class LessonListSerializer(serializers.Serializer):
                     response.append(obj)
                 return response
             except Exception as e:
-                import pdb;pdb.set_trace()
                 raise serializers.ValidationError("Error creating data")
 
 

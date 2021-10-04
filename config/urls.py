@@ -22,7 +22,8 @@ urlpatterns += [
     path("auth-token/", obtain_auth_token),
     path("user/",include('users.urls')),
     path("language/",include('language.urls')),
-    path("lesson/",include('lesson.urls'))
+    path("lesson/",include('lesson.urls')),
+    path("courses/",include('courses.urls'))
 ]
 
 if settings.DEBUG:

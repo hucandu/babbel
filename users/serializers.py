@@ -13,8 +13,9 @@ class UserSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=100)
     password = serializers.CharField(max_length=100)
     profile_picture = serializers.URLField(max_length=200, min_length=8, allow_blank=False)
-    deleted = serializers.BooleanField(default=False)
+    deleted = serializers.CharField(max_length=100, required=False)
     created_at = serializers.CharField(max_length=100, required=False)
+    updated_at = serializers.CharField(max_length=100, required=False)
 
     class Meta:
         read_only_fields = ('id', 'deleted', 'created_at')
@@ -25,8 +26,8 @@ class UserSerializer(serializers.Serializer):
     def create(self, validated_data):
         insert_query_build = '''
                 INSERT INTO users_userdata
-                (first_name, last_name, username, password, profile_picture, deleted, created_at)
-                VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id;
+                (first_name, last_name, username, password, profile_picture, deleted, created_at, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING id;
                 '''
         validated_data["created_at"] = datetime.now()
         validated_data["password"] = bcrypt.hashpw(validated_data["password"].encode('utf8'), bcrypt.gensalt()).decode('utf8')
@@ -38,8 +39,7 @@ class UserSerializer(serializers.Serializer):
                     validated_data.get("username"),
                     validated_data.get("password"),
                     validated_data.get("profile_picture"),
-                    validated_data.get("deleted"),
-                    validated_data.get("created_at")
+                    validated_data.get("deleted")
                 ])
                 row = cursor.fetchone()
                 validated_data["id"] = row[0]
@@ -64,7 +64,7 @@ class UserLoginSerializer(serializers.Serializer):
 
 
     def create(self, validated_data):
-        user_row = UserData.objects.raw('SELECT * FROM users_userdata WHERE username=%s AND deleted=false', [validated_data['username']])
+        user_row = UserData.objects.raw('SELECT * FROM users_userdata WHERE username=%s AND deleted IS NULL', [validated_data['username']])
         if len(user_row)<1:
             raise serializers.ValidationError("Username does not exist")
         else:
@@ -121,11 +121,10 @@ class UserActionSerializer(serializers.Serializer):
                 raise serializers.ValidationError("Error updating data")
 
 
-
     def delete(self, user):
         query_build = '''
                 UPDATE users_userdata
-                SET deleted = true
+                SET deleted = CURRENT_TIMESTAMP
                 WHERE id= %s;
                 '''
         with connection.cursor() as cursor:

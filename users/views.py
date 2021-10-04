@@ -25,7 +25,7 @@ def login_user(request):
 
 @api_view(['GET', 'PUT', 'DELETE'])
 @token_auth
-def user_management(request, id, user):
+def user_management(request, user):
     if request.method == "GET":
         serializer = UserSerializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)

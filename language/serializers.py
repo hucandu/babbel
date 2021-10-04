@@ -66,7 +66,6 @@ class LanguageListSerializer(serializers.Serializer):
             try:
                 cursor.execute(query_build)
             except Exception as e:
-                import pdb;pdb.set_trace()
                 raise serializers.ValidationError("Error deleting data")
 
 
