@@ -11,9 +11,9 @@ class UserSerializer(serializers.Serializer):
     first_name = serializers.CharField(max_length=100)
     last_name = serializers.CharField(max_length=100)
     username = serializers.CharField(max_length=100)
-    password = serializers.CharField(max_length=100)
+    password = serializers.CharField(max_length=100, write_only=True)
     profile_picture = serializers.URLField(max_length=200, min_length=8, allow_blank=False)
-    deleted = serializers.CharField(max_length=100, required=False)
+    deleted = serializers.CharField(max_length=100, required=False, write_only=True)
     created_at = serializers.CharField(max_length=100, required=False)
     updated_at = serializers.CharField(max_length=100, required=False)
 
@@ -52,7 +52,7 @@ class UserSerializer(serializers.Serializer):
 
 class UserLoginSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=30)
-    password = serializers.CharField(max_length=30)
+    password = serializers.CharField(max_length=30, write_only=True)
     token = serializers.CharField(max_length=100, required=False)
 
     class Meta:
