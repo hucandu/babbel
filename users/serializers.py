@@ -19,15 +19,12 @@ class UserSerializer(serializers.Serializer):
 
     class Meta:
         read_only_fields = ('id', 'deleted', 'created_at')
-        extra_kwargs = {
-            'password': {'write_only': True},
-        }
 
     def create(self, validated_data):
         insert_query_build = '''
                 INSERT INTO users_userdata
-                (first_name, last_name, username, password, profile_picture, deleted, created_at, updated_at)
-                VALUES (%s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING id;
+                (first_name, last_name, username, password, profile_picture, created_at, updated_at, deleted)
+                VALUES (%s, %s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, %s) RETURNING id;
                 '''
         validated_data["created_at"] = datetime.now()
         validated_data["password"] = bcrypt.hashpw(validated_data["password"].encode('utf8'), bcrypt.gensalt()).decode('utf8')
@@ -39,7 +36,7 @@ class UserSerializer(serializers.Serializer):
                     validated_data.get("username"),
                     validated_data.get("password"),
                     validated_data.get("profile_picture"),
-                    validated_data.get("deleted")
+                    datetime.min
                 ])
                 row = cursor.fetchone()
                 validated_data["id"] = row[0]
@@ -57,14 +54,10 @@ class UserLoginSerializer(serializers.Serializer):
 
     class Meta:
         read_only_fields = ('token')
-        extra_kwargs = {
-            'password': {'write_only': True},
-            'username': {'write_only': True},
-        }
 
 
     def create(self, validated_data):
-        user_row = UserData.objects.raw('SELECT * FROM users_userdata WHERE username=%s AND deleted IS NULL', [validated_data['username']])
+        user_row = UserData.objects.raw('SELECT * FROM users_userdata WHERE username=%s AND deleted=%s', [validated_data['username'], datetime.min])
         if len(user_row)<1:
             raise serializers.ValidationError("Username does not exist")
         else:

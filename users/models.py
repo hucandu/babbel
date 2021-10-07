@@ -1,4 +1,5 @@
 from django.db import models
+from datetime import datetime
 
 # Create your models here.
 
@@ -9,7 +10,7 @@ class UserData(models.Model):
     username = models.CharField(max_length=128)
     password = models.CharField(max_length=128)
     profile_picture = models.CharField(max_length=128)
-    deleted = models.DateTimeField(null=True)
+    deleted = models.DateTimeField(default=str(datetime.min))
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
