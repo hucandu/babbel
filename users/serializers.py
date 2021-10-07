@@ -88,7 +88,7 @@ class UserActionSerializer(serializers.Serializer):
     last_name = serializers.CharField(max_length=100)
     username = serializers.CharField(max_length=100)
     profile_picture = serializers.URLField(max_length=200, min_length=8, allow_blank=False)
-    deleted = serializers.BooleanField(default=False)
+    deleted = serializers.BooleanField(required=False)
 
     def update(self, instance, validated_data):
         query_build = '''
