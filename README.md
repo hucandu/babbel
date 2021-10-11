@@ -8,6 +8,7 @@
   - enter into virtual env using `source env/bin/activate`
   - install requirements using `pip install -r requirements/base.txt` and `pip install -r requirements/local.txt`
   - set environment variable `export DATABASE_URL=postgres://<USERNAME>:<PASSWORD>@localhost:5432/<DB_NAME>"`
+  - migrate database using `python manage.py migrate`
   - run server `python manage.py runserver`
   - *Note* - *you need to setup postgres seperatly with this type of installation and create postgres DB manually, recomended to use docker appraoch instead to directly run application with postgres*
 
